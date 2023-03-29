@@ -24,6 +24,13 @@ class AsciiConverter:
         index = int(intensity * (len(self.density_map) - 1))
         return self.density_map[index]
 
+    def print_monochrome_ascii(self, ascii_map):
+        """Prints the ASCII art in monochrome (grayscale) without colors."""
+        for row in ascii_map:
+            for char in row:
+                print(char, end="")
+            print()
+
     def image_to_ascii(self):
         """Converts the input image to ASCII art."""
         img_color = self.img.convert("RGBA")

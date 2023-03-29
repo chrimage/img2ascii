@@ -7,6 +7,7 @@ from ascii_converter import AsciiConverter
 def handle_arguments():
     parser = argparse.ArgumentParser(description="Convert an image to ASCII art.")
     parser.add_argument("-u", "--url", help="URL of the image to convert (optional)", default=None)
+    parser.add_argument("--mono", action="store_true", help="Print the ASCII art in monochrome (grayscale) without colors")
     parser.add_argument("--cats", action="store_true", help="Display a random cat image")
     parser.add_argument("--dogs", action="store_true", help="Display a random dog image")
     parser.add_argument("-w", "--width", type=int, default=100, help="Width of the ASCII art in characters")
@@ -31,13 +32,18 @@ def handle_arguments():
 def main():
     args = handle_arguments()
     init()
-    
+
     try:
         img_handler = ImageHandler(args.url)
         img = img_handler.download_image()
         ascii_converter = AsciiConverter(img, args.width)
         ascii_map, color_map = ascii_converter.image_to_ascii()
-        ascii_converter.print_colored_ascii(ascii_map, color_map)
+
+        if args.mono:
+            ascii_converter.print_monochrome_ascii(ascii_map)
+        else:
+            ascii_converter.print_colored_ascii(ascii_map, color_map)
+
     except Exception as e:
         print(f"An error occurred: {e}", file=sys.stderr)
 
