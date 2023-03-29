@@ -1,0 +1,66 @@
+import numpy as np
+from color_manager import ColorManager
+
+CHARACTER_ASPECT_RATIO = 2.2  # Assuming 1:2.2 aspect ratio for the font
+CHARS_BY_DENSITY = ' ,-._:;`\'=~"cs<>uv\/zJLx!+a)|r(oie1wn}[]{^y*tCl?IZj27mT3gYpqS5XGV4fEFUk6AbOhd&KD98$HPQRB%W0N#@M'
+
+class AsciiConverter:
+    def __init__(self, img, width):
+        self.img = img
+        self.width = width
+        self.density_map = CHARS_BY_DENSITY
+        self.color_manager = ColorManager()
+
+    def select_character(self, tile_np):
+        """Selects an ASCII character that represents the intensity of a tile."""
+        alpha = np.mean(tile_np[:, :, 3])
+
+        if alpha == 0:  # Completely transparent
+            return ' '
+
+        tile_yuv = np.dot(tile_np[:, :, :3], [0.299, 0.587, 0.114])
+        intensity = np.mean(tile_yuv) / 255.0
+
+        index = int(intensity * (len(self.density_map) - 1))
+        return self.density_map[index]
+
+    def image_to_ascii(self):
+        """Converts the input image to ASCII art."""
+        img_color = self.img.convert("RGBA")
+        img_np = np.array(img_color)
+
+        img_width, img_height = img_color.size
+        num_columns = self.width
+        num_rows = int(img_height * (self.width / img_width) / CHARACTER_ASPECT_RATIO)
+
+        column_step = img_width // num_columns
+        row_step = img_height // num_rows
+
+        ascii_map = []
+        color_map = []
+
+        for y in range(num_rows):
+            row_ascii = []
+            row_color = []
+            for x in range(num_columns):
+                tile_x = x * column_step
+                tile_y = y * row_step
+                tile_np = img_np[tile_y:tile_y + row_step, tile_x:tile_x + column_step]
+
+                row_ascii.append(self.select_character(tile_np))
+                row_color.append(self.color_manager.closest_color(tile_np))
+
+            ascii_map.append(row_ascii)
+            color_map.append(row_color)
+
+        return ascii_map, color_map
+
+    def print_colored_ascii(self, ascii_map, color_map):
+        """Prints the ASCII art with color."""
+        for row, color_row in zip(ascii_map, color_map):
+            for char, color in zip(row, color_row):
+                if color is None:
+                    print("\033[0m ", end="")
+                else:
+                    print(self.color_manager.xterm256_color_code(color) + char, end="")
+            print("\033[0m")  # Reset colors at the end of the row
