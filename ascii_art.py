@@ -4,28 +4,29 @@ import argparse
 from image_handler import ImageHandler
 from ascii_converter import AsciiConverter
 
+def generate_default_url(args):
+    if args.cats:
+        return "http://thecatapi.com/api/images/get?format=src&type=jpg"
+    elif args.dogs:
+        return "https://dog.ceo/api/breeds/image/random"
+    else:
+        return "https://picsum.photos/800/600"
+
 def handle_arguments():
     parser = argparse.ArgumentParser(description="Convert an image to ASCII art.")
-    parser.add_argument("-u", "--url", help="URL of the image to convert (optional)", default=None)
+    parser.add_argument("-u", "--url", help="URL of the image to convert (optional)", default=None, type=str)
+    parser.add_argument("-f", "--file", help="Path to the image file to convert (optional)", default=None, type=str)
+    parser.add_argument("--webcam", action="store_true", help="Take a photo using the webcam")
+    parser.add_argument("--clipboard", action="store_true", help="Load an image from the clipboard")
     parser.add_argument("--mono", action="store_true", help="Print the ASCII art in monochrome (grayscale) without colors")
     parser.add_argument("--cats", action="store_true", help="Display a random cat image")
     parser.add_argument("--dogs", action="store_true", help="Display a random dog image")
     parser.add_argument("-w", "--width", type=int, default=100, help="Width of the ASCII art in characters")
+
     args = parser.parse_args()
 
-    if args.cats and args.dogs:
-        parser.error("You can only choose one option: --cats or --dogs")
-
-    if args.url is None:
-        if args.cats:
-            # Use The Cat API for a random cat image
-            args.url = "http://thecatapi.com/api/images/get?format=src&type=jpg"
-        elif args.dogs:
-            # Use Dog API for a random dog image
-            args.url = "https://dog.ceo/api/breeds/image/random"
-        else:
-            # Use Lorem Picsum for a random image with a width of 800 pixels and a height of 600 pixels
-            args.url = "https://picsum.photos/800/600"
+    if args.url is None and args.file is None and not args.webcam and not args.clipboard:
+        args.url = generate_default_url(args)
 
     return args
 
@@ -34,8 +35,17 @@ def main():
     init()
 
     try:
-        img_handler = ImageHandler(args.url)
-        img = img_handler.download_image()
+        if args.url:
+            img_handler = ImageHandler("url", args.url)
+        elif args.file:
+            img_handler = ImageHandler("file", args.file)
+        elif args.webcam:
+            img_handler = ImageHandler("webcam", None)
+        else:
+            img_handler = ImageHandler("clipboard", None)
+
+        img = img_handler.load_image()
+
         ascii_converter = AsciiConverter(img, args.width)
         ascii_map, color_map = ascii_converter.image_to_ascii()
 
