@@ -34,7 +34,8 @@ class ImageHandler:
         except KeyError:
             raise ValueError("Invalid source type")
 
-    def download_image(self, url):
+    def download_image(self):
+        url = self.source_value
         """Download and return image from the specified URL."""
         if "dog.ceo" in url:  # Dog API returns JSON
             response = requests.get(url)
