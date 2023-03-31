@@ -22,7 +22,6 @@ class ImageHandler:
     def load_image(self):
         """
         Load image based on the specified source type and value.
-
         Raises:
             ValueError: If the source type is invalid.
             Exception: If there is an error loading the image.
@@ -31,7 +30,7 @@ class ImageHandler:
         """
         try:
             method = self.source_methods[self.source_type]
-            return method(self.source_value)
+            return method()  # Remove the passed argument here
         except KeyError:
             raise ValueError("Invalid source type")
 
