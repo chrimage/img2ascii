@@ -1,6 +1,7 @@
 import os
 import cv2
 import numpy as np
+import html
 from color_manager import ColorManager
 from skimage import exposure
 
@@ -96,13 +97,16 @@ class AsciiConverter:
                 file.write(os.linesep)
 
     def save_colored_ascii_html(self, ascii_map, color_map, output_path):
+        num_rows = len(ascii_map)
+        num_columns = len(ascii_map[0])
         with open(output_path, "w") as file:
-            file.write('<html><head><style>pre {font-family: Courier; font-size: 10pt;}</style></head><body><pre>')
+            file.write('<!DOCTYPE html><html><head><style>body {background-color: #000; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden;} pre {color: #FFF; white-space: pre-wrap; word-wrap: break-word; max-width: 100%; text-align: center;}</style><script>function setFontSize() {var container = document.querySelector("pre"); var wHeight = window.innerHeight; var wWidth = window.innerWidth; var fontSizeHeight = (wHeight / ' + str(num_rows) + '); var fontSizeWidth = (wWidth / ' + str(num_columns) + ' * 0.5); var fontSize = Math.min(fontSizeHeight, fontSizeWidth); container.style.fontSize = fontSize + "px";}</script></head><body onload="setFontSize()" onresize="setFontSize()"><div><pre>')
             for row, color_row in zip(ascii_map, color_map):
                 for char, color in zip(row, color_row):
+                    char = html.escape(char)  # Escape special characters
                     if color is None:
                         file.write(" ")
                     else:
-                        file.write(f'<span style="background-color: rgb{color};">{char}</span>')
+                        file.write(f'<span style="color: rgb{color};">{char}</span>')
                 file.write(os.linesep)
-            file.write('</pre></body></html>')
+            file.write('</pre></div></body></html>')
