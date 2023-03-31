@@ -25,6 +25,8 @@ def handle_arguments():
     parser.add_argument("--dogs", action="store_true", help="Display a random dog image")
     parser.add_argument("--invert", action="store_true", help="Invert colors of the ASCII art")
     parser.add_argument("-w", "--width", type=int, default=100, help="Width of the ASCII art in characters")
+    parser.add_argument("-o", "--output", help="Output monochrome ASCII art to a text file", default=None, type=str)
+    parser.add_argument("--html", help="Output colored ASCII art to an HTML file", default=None, type=str)
 
     args = parser.parse_args()
 
@@ -54,11 +56,15 @@ def main():
 
         ascii_converter = AsciiConverter(img, args.width)
         ascii_map, color_map = ascii_converter.image_to_ascii(args.canny, args.feature_extraction, args.invert)
-
-        if args.mono or args.canny:
-            ascii_converter.print_monochrome_ascii(ascii_map)
+        if args.output:
+            ascii_converter.save_monochrome_ascii(ascii_map, args.output)
+        elif args.html:
+            ascii_converter.save_colored_ascii_html(ascii_map, color_map, args.html)
         else:
-            ascii_converter.print_colored_ascii(ascii_map, color_map)
+            if args.mono or args.canny:
+                ascii_converter.print_monochrome_ascii(ascii_map)
+            else:
+                ascii_converter.print_colored_ascii(ascii_map, color_map)
 
     except Exception as e:
         print(f"An error occurred: {e}", file=sys.stderr)

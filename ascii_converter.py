@@ -1,3 +1,4 @@
+import os
 import cv2
 import numpy as np
 from color_manager import ColorManager
@@ -86,3 +87,22 @@ class AsciiConverter:
                 else:
                     print(self.color_manager.xterm256_color_code(color) + char, end="")
             print("\033[0m")  # Reset colors at the end of the row
+    
+    def save_monochrome_ascii(self, ascii_map, output_path):
+        with open(output_path, "w") as file:
+            for row in ascii_map:
+                for char in row:
+                    file.write(char)
+                file.write(os.linesep)
+
+    def save_colored_ascii_html(self, ascii_map, color_map, output_path):
+        with open(output_path, "w") as file:
+            file.write('<html><head><style>pre {font-family: Courier; font-size: 10pt;}</style></head><body><pre>')
+            for row, color_row in zip(ascii_map, color_map):
+                for char, color in zip(row, color_row):
+                    if color is None:
+                        file.write(" ")
+                    else:
+                        file.write(f'<span style="background-color: rgb{color};">{char}</span>')
+                file.write(os.linesep)
+            file.write('</pre></body></html>')
