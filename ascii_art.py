@@ -1,5 +1,3 @@
-#ascii_art.py
-
 import sys
 from colorama import init
 import argparse
@@ -37,6 +35,9 @@ def handle_arguments():
 
 def main():
     args = handle_arguments()
+    if args.width <= 0:
+        print("Width should be greater than 0.")
+        sys.exit(1)
     init()
 
     try:

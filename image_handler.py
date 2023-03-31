@@ -66,6 +66,8 @@ class ImageHandler:
                 raise ImportError("ImageGrab module not found. To use clipboard functionality on Linux, you need to install 'xclip' and 'pillow' packages.")
         try:
             img = ImageGrab.grabclipboard()
+            if img is None:
+                raise ValueError("No image found in the clipboard.")
             return img
         except Exception as e:
             raise Exception(f"Error loading image from clipboard: {e}")

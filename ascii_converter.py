@@ -1,5 +1,3 @@
-#ascii_converter.py
-
 import cv2
 import numpy as np
 from color_manager import ColorManager
@@ -17,9 +15,9 @@ class AsciiConverter:
 
     def equalize_luminosity(self, image_np):
         """Equalize the luminosity of the image using histogram equalization."""
-        yuv = cv2.cvtColor(image_np, cv2.COLOR_RGB2YUV)
-        yuv[..., 0] = cv2.equalizeHist(yuv[..., 0])
-        return cv2.cvtColor(yuv, cv2.COLOR_YUV2RGB)
+        ycrcb = cv2.cvtColor(image_np, cv2.COLOR_RGB2YCrCb)
+        ycrcb[..., 0] = cv2.equalizeHist(ycrcb[..., 0])
+        return cv2.cvtColor(ycrcb, cv2.COLOR_YCrCb2RGB)
     
     def select_character(self, tile_np):
         """Selects an ASCII character that represents the intensity of a tile."""
@@ -34,8 +32,7 @@ class AsciiConverter:
 
         index = int(intensity * (len(self.density_map) - 1))
         return self.density_map[index]
-
-    # Implement additional preprocessing functions here:
+        # Implement additional preprocessing functions here:
     # ...
 
     def print_monochrome_ascii(self, ascii_map):

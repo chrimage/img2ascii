@@ -20,11 +20,13 @@ class ColorManager:
 
         return colors
 
-    def closest_color(self, tile_np):
+    def closest_color(self, tile_np, invert=False):
         """Finds the closest color in the color palette for a given tile."""
         if np.min(tile_np[:, :, 3]) < 128:  # Tile has transparency
             return None
         tile_color = np.mean(tile_np[:, :, :3], axis=(0, 1))
+        if invert:
+            tile_color = 255 - tile_color
         min_color_index = self.palette_tree.query(tile_color)[1]
         return self.palette[min_color_index]
 
