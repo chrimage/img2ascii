@@ -1,3 +1,5 @@
+#image_handler.py
+
 import cv2
 import requests
 from io import BytesIO
@@ -10,32 +12,52 @@ class ImageHandler:
     def __init__(self, source_type, source_value):
         self.source_type = source_type.lower()
         self.source_value = source_value
+        self.source_methods = {
+            'url': self.download_image,
+            'file': self.load_local_image,
+            'webcam': self.capture_webcam,
+            'clipboard': self.load_image_from_clipboard
+        }
 
     def load_image(self):
-        if self.source_type == 'url':
-            return self.download_image(self.source_value)
-        elif self.source_type == 'file':
-            return self.load_local_image(self.source_value)
-        elif self.source_type == 'webcam':
-            return self.capture_webcam()
-        elif self.source_type == 'clipboard':
-            return self.load_image_from_clipboard()
-        else:
+        """
+        Load image based on the specified source type and value.
+
+        Raises:
+            ValueError: If the source type is invalid.
+            Exception: If there is an error loading the image.
+        Returns:
+            PIL.Image.Image: Loaded image.
+        """
+        try:
+            method = self.source_methods[self.source_type]
+            return method(self.source_value)
+        except KeyError:
             raise ValueError("Invalid source type")
 
     def download_image(self, url):
+        """Download and return image from the specified URL."""
         if "dog.ceo" in url:  # Dog API returns JSON
             response = requests.get(url)
             response.raise_for_status()
             url = response.json()["message"]
         response = requests.get(url)
         response.raise_for_status()
-        return Image.open(BytesIO(response.content))
+
+        try:
+            return Image.open(BytesIO(response.content))
+        except Exception as e:
+            raise Exception(f"Error loading image from URL: {e}")
 
     def load_local_image(self, path):
-        return Image.open(path)
+        """Load and return image from the specified file path."""
+        try:
+            return Image.open(path)
+        except Exception as e:
+            raise Exception(f"Error loading image from file: {e}")
 
     def load_image_from_clipboard(self):
+        """Load and return image from the clipboard."""
         if platform.system() == "Linux":
             try:
                 from PIL import ImageGrab
@@ -44,9 +66,10 @@ class ImageHandler:
         try:
             return ImageGrab.grabclipboard()
         except Exception as e:
-            raise Exception("Error loading image from clipboard: " + str(e))
+            raise Exception(f"Error loading image from clipboard: {e}")
 
     def capture_webcam(self):
+        """Capture and return image from the webcam."""
         cap = cv2.VideoCapture(0)
         ret, frame = cap.read()
         cap.release()

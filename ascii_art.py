@@ -1,3 +1,5 @@
+#ascii_art.py
+
 import sys
 from colorama import init
 import argparse
@@ -18,6 +20,8 @@ def handle_arguments():
     parser.add_argument("-f", "--file", help="Path to the image file to convert (optional)", default=None, type=str)
     parser.add_argument("--webcam", action="store_true", help="Take a photo using the webcam")
     parser.add_argument("--clipboard", action="store_true", help="Load an image from the clipboard")
+    parser.add_argument("--canny", action="store_true", help="Use Canny edge detection for preprocessing (outputs in monochrome)")
+    parser.add_argument("--feature-extraction", action="store_true", help="Use feature extraction for preprocessing (outputs in monochrome)")
     parser.add_argument("--mono", action="store_true", help="Print the ASCII art in monochrome (grayscale) without colors")
     parser.add_argument("--cats", action="store_true", help="Display a random cat image")
     parser.add_argument("--dogs", action="store_true", help="Display a random dog image")
@@ -47,9 +51,9 @@ def main():
         img = img_handler.load_image()
 
         ascii_converter = AsciiConverter(img, args.width)
-        ascii_map, color_map = ascii_converter.image_to_ascii()
+        ascii_map, color_map = ascii_converter.image_to_ascii(args.canny, args.feature_extraction)
 
-        if args.mono:
+        if args.mono or args.canny:
             ascii_converter.print_monochrome_ascii(ascii_map)
         else:
             ascii_converter.print_colored_ascii(ascii_map, color_map)
