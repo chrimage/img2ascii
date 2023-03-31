@@ -1,5 +1,3 @@
-#image_handler.py
-
 import cv2
 import requests
 from io import BytesIO
@@ -7,8 +5,8 @@ from PIL import Image, ImageGrab
 import clipboard
 import platform
 
-class ImageHandler:
 
+class ImageHandler:
     def __init__(self, source_type, source_value):
         self.source_type = source_type.lower()
         self.source_value = source_value
@@ -28,42 +26,39 @@ class ImageHandler:
         Returns:
             PIL.Image.Image: Loaded image.
         """
-        try:
-            method = self.source_methods[self.source_type]
-            return method()  # Remove the passed argument here
-        except KeyError:
+        if self.source_type not in self.source_methods:
             raise ValueError("Invalid source type")
+
+        return self.source_methods[self.source_type]()
 
     def download_image(self):
         url = self.source_value
-        """Download and return image from the specified URL."""
-        if "dog.ceo" in url:  # Dog API returns JSON
-            response = requests.get(url)
-            response.raise_for_status()
-            url = response.json()["message"]
         response = requests.get(url)
         response.raise_for_status()
+
+        if "dog.ceo" in url:  # Dog API returns JSON
+            url = response.json()["message"]
+            response = requests.get(url)
+            response.raise_for_status()
 
         try:
             return Image.open(BytesIO(response.content))
         except Exception as e:
             raise Exception(f"Error loading image from URL: {e}")
 
-    def load_local_image(self, path):
-        """Load and return image from the specified file path."""
+    def load_local_image(self):
         try:
-            img = Image.open(path)
-            return img
+            return Image.open(self.source_value)
         except Exception as e:
             raise Exception(f"Error loading image from file: {e}")
 
     def load_image_from_clipboard(self):
-        """Load and return image from the clipboard."""
         if platform.system() == "Linux":
             try:
                 from PIL import ImageGrab
             except ImportError:
                 raise ImportError("ImageGrab module not found. To use clipboard functionality on Linux, you need to install 'xclip' and 'pillow' packages.")
+
         try:
             img = ImageGrab.grabclipboard()
             if img is None:
@@ -73,10 +68,10 @@ class ImageHandler:
             raise Exception(f"Error loading image from clipboard: {e}")
 
     def capture_webcam(self):
-        """Capture and return image from the webcam."""
         cap = cv2.VideoCapture(0)
         ret, frame = cap.read()
         cap.release()
+
         if ret:
             img = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
             return img
