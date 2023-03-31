@@ -52,7 +52,8 @@ class ImageHandler:
     def load_local_image(self, path):
         """Load and return image from the specified file path."""
         try:
-            return Image.open(path)
+            img = Image.open(path)
+            return img
         except Exception as e:
             raise Exception(f"Error loading image from file: {e}")
 
@@ -64,7 +65,8 @@ class ImageHandler:
             except ImportError:
                 raise ImportError("ImageGrab module not found. To use clipboard functionality on Linux, you need to install 'xclip' and 'pillow' packages.")
         try:
-            return ImageGrab.grabclipboard()
+            img = ImageGrab.grabclipboard()
+            return img
         except Exception as e:
             raise Exception(f"Error loading image from clipboard: {e}")
 
@@ -74,6 +76,7 @@ class ImageHandler:
         ret, frame = cap.read()
         cap.release()
         if ret:
-            return Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+            img = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+            return img
         else:
             raise Exception("Could not capture image from the webcam")
