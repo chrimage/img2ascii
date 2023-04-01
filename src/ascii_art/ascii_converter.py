@@ -2,8 +2,9 @@ import os
 import cv2
 import numpy as np
 import html
-from color_manager import ColorManager
+from ascii_art.color_manager import ColorManager
 from skimage import exposure
+from skimage.filters import threshold_local
 from colorama import Fore, Back, Style
 
 DENSITY_MAP_256 = ' _,.`;\':-~"|!\/<()L>+J^=c*[{}]zirj1?syulvCIZt7oTx2Yng3pSqaeU5fVwEFOQXGmd9hHbD6PAk4%WB8K&N$#R0M@'
@@ -29,14 +30,16 @@ class AsciiConverter:
         """Selects an ASCII character that represents the intensity of a tile."""
         alpha = np.mean(tile_np[:, :, 3])
         alphathreshold = 10  # Threshold below which alpha values are considered transparent
-
         if alpha < alphathreshold:  # Completely transparent
             return ' '
 
-        tile_yuv = np.dot(tile_np[:, :, :3], [0.299, 0.587, 0.114])
-        intensity = np.mean(tile_yuv) / 255.0 * (alpha / 255.0)
-        index = int(intensity * (len(self.density_map) - 1))
+        tile_gray = cv2.cvtColor(tile_np, cv2.COLOR_RGBA2GRAY)
+        block_size = 5
+        adaptive_thresh = threshold_local(tile_gray, block_size, offset=10)
+        binary_image = tile_gray > adaptive_thresh
 
+        intensity = np.mean(binary_image)
+        index = int(intensity * (len(self.density_map) - 1))
         return self.density_map[index]
 
     def image_to_ascii(self, canny=False, feature_extraction=False, invert=False):
@@ -63,9 +66,9 @@ class AsciiConverter:
         ascii_map, color_map = self.generate_ascii_map_and_color_map(img_np, num_rows, num_columns, row_step, column_step, invert)
 
         return ascii_map, color_map
-    
+
     @staticmethod
-    def canny_edge_detection(img_np, low_threshold=50, high_threshold=200):
+    def canny_edge_detection(img_np, low_threshold=100, high_threshold=200):
         """Applies Canny edge detection to the input image."""
         img_gray = cv2.cvtColor(img_np, cv2.COLOR_RGBA2GRAY)
         edges = cv2.Canny(img_gray, low_threshold, high_threshold)
@@ -103,13 +106,13 @@ class AsciiConverter:
             color_map.append(row_color)
 
         return ascii_map, color_map
-    
+
     def canny_edge_detection(self, img_np, low_threshold=50, high_threshold=200):
         """Applies Canny edge detection to the input image."""
         img_gray = cv2.cvtColor(img_np, cv2.COLOR_RGBA2GRAY)
         edges = cv2.Canny(img_gray, low_threshold, high_threshold)
         return cv2.cvtColor(edges, cv2.COLOR_GRAY2RGBA)
-    
+
     def apply_feature_extraction(self, img_np, num_keypoints=500):
         """Applies feature extraction using ORB keypoint detector on the input image."""
         orb = cv2.ORB_create(nfeatures=num_keypoints)
@@ -133,15 +136,12 @@ class AsciiConverter:
             
     def print_colored_ascii(self, ascii_map, color_map):
         """Prints the ASCII art with color."""
-
         reset_color = Style.RESET_ALL
-
         for row, color_row in zip(ascii_map, color_map):
             for char, color in zip(row, color_row):
                 if color is None:
                     print(reset_color + ' ', end="")
                 else:
-                    background_color = Back.RGB(color[0], color[1], color[2])
-                    print(background_color + char, end="")
+                    foreground_color = self.color_manager.xterm256_color_code(color)
+                    print(foreground_color + char, end="")
             print(reset_color)  # Reset colors at the end of the row
-

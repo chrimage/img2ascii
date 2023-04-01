@@ -1,8 +1,8 @@
 import sys
 from colorama import init
 import argparse
-from image_handler import ImageHandler
-from ascii_converter import AsciiConverter
+from ascii_art.image_handler import ImageHandler
+from ascii_art.ascii_converter import AsciiConverter
 
 def generate_default_url(args):
     if args.cats:

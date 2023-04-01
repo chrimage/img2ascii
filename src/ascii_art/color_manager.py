@@ -35,8 +35,8 @@ class ColorManager:
         r, g, b = color
         if r == g and g == b:
             if r < 8:
-                return "\033[48;5;16m"
+                return "\033[38;5;16m"
             if r > 248:
-                return "\033[48;5;231m"
-            return f"\033[48;5;{232 + (r - 8) // 10}m"
-        return f"\033[48;5;{16 + (r // 51) * 36 + (g // 51) * 6 + (b // 51)}m"
+                return "\033[38;5;231m"
+            return f"\033[38;5;{232 + (r - 8) // 10}m"
+        return f"\033[38;5;{16 + (r // 51) * 36 + (g // 51) * 6 + (b // 51)}m"
