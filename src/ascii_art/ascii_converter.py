@@ -4,6 +4,7 @@ import numpy as np
 import html
 from color_manager import ColorManager
 from skimage import exposure
+from colorama import Fore, Back, Style
 
 DENSITY_MAP_256 = ' _,.`;\':-~"|!\/<()L>+J^=c*[{}]zirj1?syulvCIZt7oTx2Yng3pSqaeU5fVwEFOQXGmd9hHbD6PAk4%WB8K&N$#R0M@'
 DENSITY_MAP_16 = ' ,;"<[?IneEhABR@'
@@ -62,6 +63,25 @@ class AsciiConverter:
         ascii_map, color_map = self.generate_ascii_map_and_color_map(img_np, num_rows, num_columns, row_step, column_step, invert)
 
         return ascii_map, color_map
+    
+    @staticmethod
+    def canny_edge_detection(img_np, low_threshold=50, high_threshold=200):
+        """Applies Canny edge detection to the input image."""
+        img_gray = cv2.cvtColor(img_np, cv2.COLOR_RGBA2GRAY)
+        edges = cv2.Canny(img_gray, low_threshold, high_threshold)
+        return cv2.cvtColor(edges, cv2.COLOR_GRAY2RGBA)
+
+    def apply_feature_extraction(self, img_np, num_keypoints=500):
+        """Applies feature extraction using SIFT keypoint detector on the input image."""
+        sift = cv2.SIFT_create(nfeatures=num_keypoints)
+        keypoints, _ = sift.detectAndCompute(cv2.cvtColor(img_np, cv2.COLOR_RGBA2GRAY), None)
+
+        # Create a black image of the same size as the input image
+        feature_img = np.zeros_like(img_np)
+
+        # Draw the keypoints on the black image
+        feature_img = cv2.drawKeypoints(feature_img, keypoints, None, color=(255, 255, 255), flags=cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+        return feature_img
 
     def generate_ascii_map_and_color_map(self, img_np, num_rows, num_columns, row_step, column_step, invert):
         ascii_map = []
@@ -83,3 +103,45 @@ class AsciiConverter:
             color_map.append(row_color)
 
         return ascii_map, color_map
+    
+    def canny_edge_detection(self, img_np, low_threshold=50, high_threshold=200):
+        """Applies Canny edge detection to the input image."""
+        img_gray = cv2.cvtColor(img_np, cv2.COLOR_RGBA2GRAY)
+        edges = cv2.Canny(img_gray, low_threshold, high_threshold)
+        return cv2.cvtColor(edges, cv2.COLOR_GRAY2RGBA)
+    
+    def apply_feature_extraction(self, img_np, num_keypoints=500):
+        """Applies feature extraction using ORB keypoint detector on the input image."""
+        orb = cv2.ORB_create(nfeatures=num_keypoints)
+        keypoints = orb.detect(cv2.cvtColor(img_np, cv2.COLOR_RGBA2GRAY), None)
+        keypoints, _ = orb.compute(img_np, keypoints)
+
+        # Create a black image of the same size as the input image
+        feature_img = np.zeros_like(img_np)
+
+        # Draw the keypoints on the black image
+        feature_img = cv2.drawKeypoints(feature_img, keypoints, None, color=(255, 255, 255), flags=cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+
+        return feature_img
+
+    def print_monochrome_ascii(self, ascii_map):
+        """Prints the ASCII art in monochrome (grayscale) without colors."""
+        for row in ascii_map:
+            for char in row:
+                print(char, end="")
+            print()
+            
+    def print_colored_ascii(self, ascii_map, color_map):
+        """Prints the ASCII art with color."""
+
+        reset_color = Style.RESET_ALL
+
+        for row, color_row in zip(ascii_map, color_map):
+            for char, color in zip(row, color_row):
+                if color is None:
+                    print(reset_color + ' ', end="")
+                else:
+                    background_color = Back.RGB(color[0], color[1], color[2])
+                    print(background_color + char, end="")
+            print(reset_color)  # Reset colors at the end of the row
+
