@@ -6,19 +6,20 @@ class ColorManager:
         self.palette = self.xterm256_palette()
         self.palette_tree = KDTree(self.palette)
 
-    def xterm256_palette(self):
-        """Generates the xterm256 color palette."""
-        colors = [
+    def basic_colors(self):
+        return [
             (0, 0, 0), (128, 0, 0), (0, 128, 0), (128, 128, 0),
             (0, 0, 128), (128, 0, 128), (0, 128, 128), (192, 192, 192)
         ]
 
-        for r, g, b in [(r, g, b) for r in (0, 95, 135, 175, 215, 255) for g in (0, 95, 135, 175, 215, 255) for b in (0, 95, 135, 175, 215, 255)]:
-            colors.append((r, g, b))
+    def rgb_colors(self):
+        return [(r, g, b) for r in (0, 95, 135, 175, 215, 255) for g in (0, 95, 135, 175, 215, 255) for b in (0, 95, 135, 175, 215, 255)]
 
-        colors.extend([(i, i, i) for i in range(8, 248, 10)])
+    def grayscale_colors(self):
+        return [(i, i, i) for i in range(8, 248, 10)]
 
-        return colors
+    def xterm256_palette(self):
+        return self.basic_colors() + self.rgb_colors() + self.grayscale_colors()
 
     def closest_color(self, tile_np, invert=False):
         """Finds the closest color in the color palette for a given tile."""

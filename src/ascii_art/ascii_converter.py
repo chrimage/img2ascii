@@ -28,7 +28,10 @@ class AsciiConverter:
 
     def select_character(self, tile_np):
         """Selects an ASCII character that represents the intensity of a tile."""
-        alpha = np.mean(tile_np[:, :, 3])
+        try:
+            alpha = np.mean(tile_np[:, :, 3])
+        except IndexError:
+            alpha = 255
         alphathreshold = 10  # Threshold below which alpha values are considered transparent
         if alpha < alphathreshold:  # Completely transparent
             return ' '
@@ -37,7 +40,6 @@ class AsciiConverter:
         block_size = 5
         adaptive_thresh = threshold_local(tile_gray, block_size, offset=10)
         binary_image = tile_gray > adaptive_thresh
-
         intensity = np.mean(binary_image)
         index = int(intensity * (len(self.density_map) - 1))
         return self.density_map[index]
@@ -57,34 +59,9 @@ class AsciiConverter:
         column_step = img_width // num_columns
         row_step = img_height // num_rows
 
-        if canny:
-            img_np = self.canny_edge_detection(img_np)
-
-        if feature_extraction:
-            img_np = self.apply_feature_extraction(img_np)
-
         ascii_map, color_map = self.generate_ascii_map_and_color_map(img_np, num_rows, num_columns, row_step, column_step, invert)
 
         return ascii_map, color_map
-
-    @staticmethod
-    def canny_edge_detection(img_np, low_threshold=100, high_threshold=200):
-        """Applies Canny edge detection to the input image."""
-        img_gray = cv2.cvtColor(img_np, cv2.COLOR_RGBA2GRAY)
-        edges = cv2.Canny(img_gray, low_threshold, high_threshold)
-        return cv2.cvtColor(edges, cv2.COLOR_GRAY2RGBA)
-
-    def apply_feature_extraction(self, img_np, num_keypoints=500):
-        """Applies feature extraction using SIFT keypoint detector on the input image."""
-        sift = cv2.SIFT_create(nfeatures=num_keypoints)
-        keypoints, _ = sift.detectAndCompute(cv2.cvtColor(img_np, cv2.COLOR_RGBA2GRAY), None)
-
-        # Create a black image of the same size as the input image
-        feature_img = np.zeros_like(img_np)
-
-        # Draw the keypoints on the black image
-        feature_img = cv2.drawKeypoints(feature_img, keypoints, None, color=(255, 255, 255), flags=cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
-        return feature_img
 
     def generate_ascii_map_and_color_map(self, img_np, num_rows, num_columns, row_step, column_step, invert):
         ascii_map = []
@@ -106,26 +83,6 @@ class AsciiConverter:
             color_map.append(row_color)
 
         return ascii_map, color_map
-
-    def canny_edge_detection(self, img_np, low_threshold=50, high_threshold=200):
-        """Applies Canny edge detection to the input image."""
-        img_gray = cv2.cvtColor(img_np, cv2.COLOR_RGBA2GRAY)
-        edges = cv2.Canny(img_gray, low_threshold, high_threshold)
-        return cv2.cvtColor(edges, cv2.COLOR_GRAY2RGBA)
-
-    def apply_feature_extraction(self, img_np, num_keypoints=500):
-        """Applies feature extraction using ORB keypoint detector on the input image."""
-        orb = cv2.ORB_create(nfeatures=num_keypoints)
-        keypoints = orb.detect(cv2.cvtColor(img_np, cv2.COLOR_RGBA2GRAY), None)
-        keypoints, _ = orb.compute(img_np, keypoints)
-
-        # Create a black image of the same size as the input image
-        feature_img = np.zeros_like(img_np)
-
-        # Draw the keypoints on the black image
-        feature_img = cv2.drawKeypoints(feature_img, keypoints, None, color=(255, 255, 255), flags=cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
-
-        return feature_img
 
     def print_monochrome_ascii(self, ascii_map):
         """Prints the ASCII art in monochrome (grayscale) without colors."""

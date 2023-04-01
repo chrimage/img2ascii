@@ -36,11 +36,6 @@ class ImageHandler:
         response = requests.get(url)
         response.raise_for_status()
 
-        if "dog.ceo" in url:  # Dog API returns JSON
-            url = response.json()["message"]
-            response = requests.get(url)
-            response.raise_for_status()
-
         try:
             return Image.open(BytesIO(response.content))
         except Exception as e:
@@ -54,11 +49,19 @@ class ImageHandler:
 
     def load_image_from_clipboard(self):
         if platform.system() == "Linux":
-            try:
-                from PIL import ImageGrab
-            except ImportError:
-                raise ImportError("ImageGrab module not found. To use clipboard functionality on Linux, you need to install 'xclip' and 'pillow' packages.")
+            return self.load_image_from_clipboard_linux()
+        else:
+            return self.load_image_from_clipboard_generic()
 
+    def load_image_from_clipboard_linux(self):
+        try:
+            from PIL import ImageGrab
+        except ImportError:
+            raise ImportError("ImageGrab module not found. To use clipboard functionality on Linux, you need to install 'xclip' and 'pillow' packages.")
+
+        return self.load_image_from_clipboard_generic()
+
+    def load_image_from_clipboard_generic(self):
         try:
             img = ImageGrab.grabclipboard()
             if img is None:
