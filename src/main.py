@@ -24,8 +24,11 @@ def main():
             img_handler = ImageHandler("file", args.file)
         elif args.webcam:
             img_handler = ImageHandler("webcam", None)
-        else:
+        elif args.clipboard:
             img_handler = ImageHandler("clipboard", None)
+        else:
+            img_url = generate_default_url(args)
+            img_handler = ImageHandler("url", img_url)
 
         img = img_handler.load_image()
 
