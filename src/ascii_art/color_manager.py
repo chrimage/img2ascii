@@ -1,10 +1,26 @@
 import numpy as np
 from scipy.spatial import KDTree
+from enum import Enum
+
+class ColorPalettes(Enum):
+    xterm256 = "xterm256"
+    ansi = "ansi"
+    truecolor = "truecolor"
 
 class ColorManager:
-    def __init__(self):
-        self.palette = self.xterm256_palette()
+    def __init__(self, palette: ColorPalettes = ColorPalettes.xterm256):
+        self.palette = self.get_palette_for(palette)
         self.palette_tree = KDTree(self.palette)
+
+    def get_palette_for(self, palette: ColorPalettes):
+        if palette == ColorPalettes.xterm256:
+            return self.xterm256_palette()
+        elif palette == ColorPalettes.ansi:
+            return self.ansi_palette()
+        elif palette == ColorPalettes.truecolor:
+            return self.truecolor_palette()
+        else:
+            raise ValueError(f"Invalid color palette: {palette}")
 
     def basic_colors(self):
         return [
@@ -21,8 +37,16 @@ class ColorManager:
     def xterm256_palette(self):
         return self.basic_colors() + self.rgb_colors() + self.grayscale_colors()
 
+    def ansi_palette(self):
+        # Add your ANSI palette implementation here
+        pass
+
+    def truecolor_palette(self):
+        # Add your Truecolor palette implementation here
+        pass
+
     def closest_color(self, tile_np, invert=False):
-        """Finds the closest color in the color palette for a given tile."""
+        
         if np.min(tile_np[:, :, 3]) < 128:  # Tile has transparency
             return None
         tile_color = np.mean(tile_np[:, :, :3], axis=(0, 1))
@@ -32,7 +56,7 @@ class ColorManager:
         return self.palette[min_color_index]
 
     def xterm256_color_code(self, color):
-        """Generates the xterm256 color code for a given color."""
+        
         r, g, b = color
         if r == g and g == b:
             if r < 8:

@@ -1,8 +1,6 @@
 import sys
 from colorama import init
-import argparse
-from ascii_art.image_handler import ImageHandler
-from ascii_art.ascii_converter import AsciiConverter
+from ascii_art import get_cli_arguments, ImageHandler, AsciiConverter, ColorPalettes
 
 def generate_default_url(args):
     if args.cats:
@@ -12,31 +10,8 @@ def generate_default_url(args):
     else:
         return "https://picsum.photos/800/600"
 
-def handle_arguments():
-    parser = argparse.ArgumentParser(description="Convert an image to ASCII art.")
-    parser.add_argument("-u", "--url", help="URL of the image to convert (optional)", default=None, type=str)
-    parser.add_argument("-f", "--file", help="Path to the image file to convert (optional)", default=None, type=str)
-    parser.add_argument("--webcam", action="store_true", help="Take a photo using the webcam")
-    parser.add_argument("--clipboard", action="store_true", help="Load an image from the clipboard")
-    parser.add_argument("--canny", action="store_true", help="Use Canny edge detection for preprocessing (outputs in monochrome)")
-    parser.add_argument("--feature-extraction", action="store_true", help="Use feature extraction for preprocessing (outputs in monochrome)")
-    parser.add_argument("--mono", action="store_true", help="Print the ASCII art in monochrome (grayscale) without colors")
-    parser.add_argument("--cats", action="store_true", help="Display a random cat image")
-    parser.add_argument("--dogs", action="store_true", help="Display a random dog image")
-    parser.add_argument("--invert", action="store_true", help="Invert colors of the ASCII art")
-    parser.add_argument("-w", "--width", type=int, default=100, help="Width of the ASCII art in characters")
-    parser.add_argument("-o", "--output", help="Output monochrome ASCII art to a text file", default=None, type=str)
-    parser.add_argument("--html", help="Output colored ASCII art to an HTML file", default=None, type=str)
-
-    args = parser.parse_args()
-
-    if args.url is None and args.file is None and not args.webcam and not args.clipboard:
-        args.url = generate_default_url(args)
-
-    return args
-
 def main():
-    args = handle_arguments()
+    args = get_cli_arguments()
     if args.width <= 0:
         print("Width should be greater than 0.")
         sys.exit(1)
@@ -54,8 +29,15 @@ def main():
 
         img = img_handler.load_image()
 
-        ascii_converter = AsciiConverter(img, args.width)
-        ascii_map, color_map = ascii_converter.image_to_ascii(args.canny, args.feature_extraction, args.invert)
+        ascii_converter = AsciiConverter(img, args.width, palette=ColorPalettes(args.palette), density_map=args.density_map)
+        ascii_map, color_map = ascii_converter.image_to_ascii(
+            contrast_stretching=args.contrast_stretching,
+            gamma_correction=args.gamma_correction,
+            canny=args.canny,
+            feature_extraction=args.feature_extraction,
+            invert=args.invert
+        )
+
         if args.output:
             ascii_converter.save_monochrome_ascii(ascii_map, args.output)
         elif args.html:

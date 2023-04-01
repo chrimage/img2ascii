@@ -2,7 +2,7 @@ import os
 import cv2
 import numpy as np
 import html
-from ascii_art.color_manager import ColorManager
+from ascii_art.color_manager import ColorManager, ColorPalettes
 from skimage import exposure
 from skimage.filters import threshold_local
 from colorama import Fore, Back, Style
@@ -11,23 +11,37 @@ DENSITY_MAP_256 = ' _,.`;\':-~"|!\/<()L>+J^=c*[{}]zirj1?syulvCIZt7oTx2Yng3pSqaeU
 DENSITY_MAP_16 = ' ,;"<[?IneEhABR@'
 CHARACTER_ASPECT_RATIO = 0.4897959183673469
 
-
 class AsciiConverter:
-    def __init__(self, img, width, density_map=DENSITY_MAP_16):
+
+    def __init__(self, img, width, palette=ColorPalettes.xterm256, density_map=DENSITY_MAP_16):
         self.img = img
         self.width = width
         self.density_map = density_map
-        self.color_manager = ColorManager()
+        self.color_manager = ColorManager(palette)
 
     @staticmethod
     def equalize_luminosity(image_np):
-        """Equalize the luminosity of the image using histogram equalization."""
+        
         ycrcb = cv2.cvtColor(image_np, cv2.COLOR_RGB2YCrCb)
         ycrcb[..., 0] = cv2.equalizeHist(ycrcb[..., 0])
         return cv2.cvtColor(ycrcb, cv2.COLOR_YCrCb2RGB)
 
+    def perform_contrast_stretching(self, image_np):
+        p2, p98 = np.percentile(image_np, (2, 98))
+        return exposure.rescale_intensity(image_np, in_range=(p2, p98))
+
+    def perform_gamma_correction(self, image_np, gamma=1.5):
+        return exposure.adjust_gamma(image_np, gamma=gamma)
+
+    def preprocess_image(self, image_np, contrast_stretching=False, gamma_correction=False):
+        if contrast_stretching:
+            image_np = self.perform_contrast_stretching(image_np)
+        if gamma_correction:
+            image_np = self.perform_gamma_correction(image_np)
+        return image_np
+
     def select_character(self, tile_np):
-        """Selects an ASCII character that represents the intensity of a tile."""
+        
         try:
             alpha = np.mean(tile_np[:, :, 3])
         except IndexError:
@@ -44,11 +58,13 @@ class AsciiConverter:
         index = int(intensity * (len(self.density_map) - 1))
         return self.density_map[index]
 
-    def image_to_ascii(self, canny=False, feature_extraction=False, invert=False):
-        """Converts the input image to ASCII art."""
+    def image_to_ascii(self, contrast_stretching=False, gamma_correction=False, canny=False, feature_extraction=False, invert=False):
+        
         img_color = self.img.convert("RGBA")
         img_np = np.array(img_color)
         img_np[:, :, :3] = self.equalize_luminosity(img_np[:, :, :3])
+
+        img_np = self.preprocess_image(img_np, contrast_stretching=contrast_stretching, gamma_correction=gamma_correction)
 
         img_width, img_height = img_color.size
         num_columns = self.width
@@ -85,14 +101,14 @@ class AsciiConverter:
         return ascii_map, color_map
 
     def print_monochrome_ascii(self, ascii_map):
-        """Prints the ASCII art in monochrome (grayscale) without colors."""
+        
         for row in ascii_map:
             for char in row:
                 print(char, end="")
             print()
-            
+
     def print_colored_ascii(self, ascii_map, color_map):
-        """Prints the ASCII art with color."""
+        
         reset_color = Style.RESET_ALL
         for row, color_row in zip(ascii_map, color_map):
             for char, color in zip(row, color_row):
