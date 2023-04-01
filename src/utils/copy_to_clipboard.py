@@ -1,105 +1,95 @@
+#!/usr/bin/env python3
 import sys
 import os
 import argparse
 import pyperclip
 import re
+import glob
 
 LANGUAGE_EXTENSIONS_MAP = {
     '.py': 'python',
-    '.js': 'javascript',
-    '.c': 'c',
-    '.cpp': 'cpp',
-    '.java': 'java',
-    '.html': 'html',
-    '.css': 'css',
-    '.go': 'go',
-    '.rb': 'ruby',
-    '.rs': 'rust',
-    '.sh': 'bash',
-    '.swift': 'swift',
-    '.ts': 'typescript',
-    '.php': 'php',
-    '.cs': 'csharp',
-    '.pl': 'perl',
-    '.scala': 'scala',
-    '.lua': 'lua',
-    '.yaml': 'yaml',
-    '.json': 'json',
-    '.xml': 'xml',
-    # Add more language mappings if needed
+    '.txt': 'plaintext',
+    '.md': 'markdown',
 }
 
-INTERPRETER_MAP = {
-    '.py': 'python3',
-    '.sh': 'bash',
-    # Add more interpreter mappings if needed
-}
+EXTENSIONS_SUPPORTED = ["*.py", "*.txt", "*.md"]
 
 class InvalidFilePathError(Exception):
     pass
 
-def read_file_content(filename, encoding=None):
+def read_file_content(filename, encoding=None, strip_comments=False, strip_docstrings=False):
     try:
         with open(filename, 'r', encoding=encoding) as f:
-            return f.read()
+            content = f.read()
+            if os.path.splitext(filename)[1] == '.py' and strip_comments:
+                content = re.sub(r"(?m)(^#.*$)", "", content)
+
+            if os.path.splitext(filename)[1] == '.py' and strip_docstrings:
+                content = re.sub(r"(?ms)('''[\s\S]*?'''|\"\"\"[\s\S]*?\"\"\")", "", content)
+
+            return content
     except Exception as e:
         raise InvalidFilePathError(f'Error reading {filename}: {str(e)}')
 
-def detect_language(filename):
-    extension = os.path.splitext(filename)[1]
-    return LANGUAGE_EXTENSIONS_MAP.get(extension, '')
-
-def add_shebang_line_if_missing(file_content, filename):
-    extension = os.path.splitext(filename)[1]
-    interpreter = INTERPRETER_MAP.get(extension)
-    if interpreter:
-        shebang_line = file_content.strip().splitlines()[0]
-        if not re.match(rf'^#!.*\b{interpreter}\b', shebang_line):
-            file_content = f'#!/usr/bin/env {interpreter}\n' + file_content
-    return file_content
-
-def copy_to_clipboard(filenames, encoding=None, exclude_empty_files=False, initial_comment=''):
-    content = []
-    for index, filename in enumerate(filenames):
-        if os.path.isfile(filename):
-            file_content = read_file_content(filename, encoding).rstrip()
-            file_content = add_shebang_line_if_missing(file_content, filename)
-            language = detect_language(filename)
-            if file_content or not exclude_empty_files:
-                if initial_comment:
-                    content.append(initial_comment.strip())
-                content.append(f'Filename: {filename}')
-                content.append(f'```{language}')
-                content.append(file_content)
-                content.append('```')
-                if len(filenames) > 1 and index < len(filenames) - 1:
-                    content.append('---')
+def get_files_recursive(paths, extensions_supported=None):
+    files = []
+    for path in paths:
+        if os.path.isdir(path):
+            for root, dirs, filenames in os.walk(path):
+                for filename in filenames:
+                    if not extensions_supported or any(filename.endswith(ext) for ext in extensions_supported):
+                        files.append(os.path.join(root, filename))
+        elif os.path.isfile(path):
+            if not extensions_supported or any(path.endswith(ext) for ext in extensions_supported):
+                files.append(path)
         else:
-            raise InvalidFilePathError(f'{filename} is not a valid file. Please provide a valid file path.')
+            for ext in extensions_supported or []:
+                for filepath in glob.glob(os.path.join(path, ext)):
+                    files.append(filepath)
 
-    if content:
-        clipboard_content = '\n'.join(content)
-        if encoding:
-            clipboard_content = clipboard_content.encode(encoding)
-        pyperclip.copy(clipboard_content)
-        print('The contents of the following files have been copied to the clipboard:')
-        for filename in filenames:
-            if os.path.isfile(filename):
-                print(f'- {filename}')
-    else:
-        print('No valid or non-empty files were provided.')
+        if not files and os.path.isdir(path):
+            for ext in extensions_supported or []:
+                for filepath in glob.glob(os.path.join(path, ext)):
+                    files.append(filepath)
+
+    return files
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Copy the contents of one or more files to the clipboard as code blocks.')
-    parser.add_argument('files', metavar='file', type=str, nargs='+', help='a file to copy its content to clipboard')
+    parser.add_argument('input', metavar='input', type=str, nargs='*', help='a file or a directory to copy its content to clipboard')
     parser.add_argument('-e', '--encoding', type=str, default=None, help='the encoding to use when reading the files (default: None)')
-    parser.add_argument('--exclude-empty-files', action='store_true', help='exclude empty files from clipboard output (default: False)')
-    parser.add_argument('-c', '--initial-comment', type=str, default='', help='include an initial comment highlighting context or task (default: empty)')
+    parser.add_argument('--strip-comments', action='store_true', help='remove comments from the code (default: False)')
+    parser.add_argument('--strip-docstrings', action='store_true', help='remove docstrings from the code (default: False)')
     return parser.parse_args()
 
 if __name__ == '__main__':
     args = parse_args()
     try:
-        copy_to_clipboard(args.files, args.encoding, args.exclude_empty_files, args.initial_comment)
+        files = get_files_recursive(args.input, EXTENSIONS_SUPPORTED)
+        if files:
+            content = []
+            for index, filename in enumerate(files):
+                file_content = read_file_content(filename, args.encoding, args.strip_comments, args.strip_docstrings).rstrip()
+                
+                if not file_content:
+                    continue
+                
+                language = LANGUAGE_EXTENSIONS_MAP.get(os.path.splitext(filename)[1], '')
+                content.append(f'Filename: {filename}')
+                content.append(f'```{language}')
+                content.append(file_content)
+                content.append('```')
+
+                if index < len(files) - 1:
+                    content.append('---')
+    
+            clipboard_content = '\n'.join(content)
+            pyperclip.copy(clipboard_content)
+            print('The contents of the following files have been copied to the clipboard:')
+            for filename in files:
+                print(f'- {filename}')
+        else:
+            print('No valid or non-empty files were provided.')
+
     except InvalidFilePathError as e:
         print(f'Error: {e}')
