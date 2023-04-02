@@ -1,5 +1,5 @@
 import argparse
-from ascii_art.ascii_converter import DENSITY_MAP_16, DENSITY_MAP_256
+from ascii_art.ascii_handler import DENSITY_MAP_16, DENSITY_MAP_256
 from ascii_art.color_manager import ColorPalettes
 
 def get_cli_arguments():
@@ -20,7 +20,7 @@ def get_cli_arguments():
     # Output style
     style_group = parser.add_argument_group("style")
     style_group.add_argument("--mono", action="store_true", help="Print the ASCII art in monochrome (grayscale)")
-    style_group.add_argument("--palette", choices=ColorPalettes, default=ColorPalettes.xterm256, help="Choose a color palette for the ASCII art")
+    style_group.add_argument("--palette", choices=list(ColorPalettes), default=ColorPalettes.xterm256, help="Choose a color palette for the ASCII art")
     style_group.add_argument("--density-map", default=DENSITY_MAP_16, help="Specify a custom density map for the ASCII art")
     style_group.add_argument("--invert", action="store_true", help="Invert colors of the ASCII art")
     style_group.add_argument("-w", "--width", type=int, default=100, help="Width of the ASCII art in characters (default: 100)")

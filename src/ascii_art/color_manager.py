@@ -58,7 +58,6 @@ class ColorManager:
         return self.palette[min_color_index]
 
     def xterm256_color_code(self, color):
-        
         r, g, b = color
         if r == g and g == b:
             if r < 8:

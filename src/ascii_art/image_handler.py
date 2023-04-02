@@ -4,6 +4,7 @@ import requests
 import numpy as np
 from io import BytesIO
 from PIL import Image, ImageGrab
+from skimage import io
 
 class ImageHandler:
     def __init__(self, source_type, source):
@@ -24,11 +25,11 @@ class ImageHandler:
 
     def load_image_from_url(self, url):
         response = requests.get(url)
-        img = Image.open(BytesIO(response.content))
+        img = io.imread(BytesIO(response.content))
         return img
 
     def load_image_from_file(self, file_path):
-        img = Image.open(file_path)
+        img = io.imread(file_path)
         return img
     
     def load_image_from_webcam(self):

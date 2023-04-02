@@ -17,16 +17,21 @@ EXTENSIONS_SUPPORTED = ["*.py", "*.txt", "*.md"]
 class InvalidFilePathError(Exception):
     pass
 
+def strip_comments_and_docstrings(content, file_ext, strip_comments, strip_docstrings):
+    if file_ext == '.py':
+        if strip_comments:
+            content = re.sub(r"(?m)(^#.*$)", "", content)
+
+        if strip_docstrings:
+            content = re.sub(r"(?ms)('''[\s\S]*?'''|\"\"\"[\s\S]*?\"\"\")", "", content)
+    return content
+
 def read_file_content(filename, encoding=None, strip_comments=False, strip_docstrings=False):
     try:
         with open(filename, 'r', encoding=encoding) as f:
             content = f.read()
-            if os.path.splitext(filename)[1] == '.py' and strip_comments:
-                content = re.sub(r"(?m)(^#.*$)", "", content)
-
-            if os.path.splitext(filename)[1] == '.py' and strip_docstrings:
-                content = re.sub(r"(?ms)('''[\s\S]*?'''|\"\"\"[\s\S]*?\"\"\")", "", content)
-
+            file_ext = os.path.splitext(filename)[1]
+            content = strip_comments_and_docstrings(content, file_ext, strip_comments, strip_docstrings)
             return content
     except Exception as e:
         raise InvalidFilePathError(f'Error reading {filename}: {str(e)}')
@@ -37,10 +42,10 @@ def get_files_recursive(paths, extensions_supported=None):
         if os.path.isdir(path):
             for root, dirs, filenames in os.walk(path):
                 for filename in filenames:
-                    if not extensions_supported or any(filename.endswith(ext) for ext in extensions_supported):
+                    if not extensions_supported or any(filename.endswith(ext[1:]) for ext in extensions_supported):
                         files.append(os.path.join(root, filename))
         elif os.path.isfile(path):
-            if not extensions_supported or any(path.endswith(ext) for ext in extensions_supported):
+            if not extensions_supported or any(path.endswith(ext[1:]) for ext in extensions_supported):
                 files.append(path)
         else:
             for ext in extensions_supported or []:
