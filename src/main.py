@@ -36,8 +36,6 @@ def main():
         ascii_map, color_map = ascii_converter.image_to_ascii(
             contrast_stretching=args.contrast_stretching,
             gamma_correction=args.gamma_correction,
-            canny=args.canny,
-            feature_extraction=args.feature_extraction,
             invert=args.invert
         )
 
@@ -46,7 +44,7 @@ def main():
         elif args.html:
             ascii_converter.save_colored_ascii_html(ascii_map, color_map, args.html)
         else:
-            if args.mono or args.canny:
+            if args.mono:
                 ascii_converter.print_monochrome_ascii(ascii_map)
             else:
                 ascii_converter.print_colored_ascii(ascii_map, color_map)

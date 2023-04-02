@@ -12,8 +12,9 @@ DENSITY_MAP_16 = ' ,;"<[?IneEhABR@'
 CHARACTER_ASPECT_RATIO = 0.4897959183673469
 
 class AsciiConverter:
-
     def __init__(self, img, width, palette=ColorPalettes.xterm256, density_map=DENSITY_MAP_16):
+        if width <= 0:
+            raise ValueError("Width should be greater than 0.")
         self.img = img
         self.width = width
         self.density_map = density_map
@@ -26,12 +27,19 @@ class AsciiConverter:
         ycrcb[..., 0] = cv2.equalizeHist(ycrcb[..., 0])
         return cv2.cvtColor(ycrcb, cv2.COLOR_YCrCb2RGB)
 
+
     def perform_contrast_stretching(self, image_np):
-        p2, p98 = np.percentile(image_np, (2, 98))
-        return exposure.rescale_intensity(image_np, in_range=(p2, p98))
+        lab = cv2.cvtColor(image_np, cv2.COLOR_RGB2LAB)
+        l, a, b = cv2.split(lab)
+        clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+        cl = clahe.apply(l)
+        limg = cv2.merge((cl, a, b))
+        return cv2.cvtColor(limg, cv2.COLOR_LAB2RGB)
 
     def perform_gamma_correction(self, image_np, gamma=1.5):
-        return exposure.adjust_gamma(image_np, gamma=gamma)
+        inv_gamma = 1.0 / gamma
+        lut = np.array([((i / 255.0) ** inv_gamma) * 255 for i in np.arange(0, 256)], dtype="uint8")
+        return cv2.LUT(image_np, lut)
 
     def preprocess_image(self, image_np, contrast_stretching=False, gamma_correction=False):
         if contrast_stretching:
@@ -40,8 +48,8 @@ class AsciiConverter:
             image_np = self.perform_gamma_correction(image_np)
         return image_np
 
+
     def select_character(self, tile_np):
-        
         try:
             alpha = np.mean(tile_np[:, :, 3])
         except IndexError:
@@ -50,7 +58,7 @@ class AsciiConverter:
         if alpha < alphathreshold:  # Completely transparent
             return ' '
 
-        tile_gray = cv2.cvtColor(tile_np, cv2.COLOR_RGBA2GRAY)
+        tile_gray = cv2.cvtColor(tile_np[:, :, :3], cv2.COLOR_RGB2GRAY)
         block_size = 5
         adaptive_thresh = threshold_local(tile_gray, block_size, offset=10)
         binary_image = tile_gray > adaptive_thresh
@@ -58,7 +66,7 @@ class AsciiConverter:
         index = int(intensity * (len(self.density_map) - 1))
         return self.density_map[index]
 
-    def image_to_ascii(self, contrast_stretching=False, gamma_correction=False, canny=False, feature_extraction=False, invert=False):
+    def image_to_ascii(self, contrast_stretching=False, gamma_correction=False, invert=False):
         
         img_color = self.img.convert("RGBA")
         img_np = np.array(img_color)

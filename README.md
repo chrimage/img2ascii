@@ -26,8 +26,6 @@ By default, the application will generate ASCII art for a random image with 100 
 - `-f` or `--file`: Specify a path to the image file to convert (optional)
 - `--webcam`: Take a photo using the webcam to convert into ASCII art
 - `--clipboard`: Load an image from the clipboard to convert into ASCII art
-- `--canny`: Use Canny edge detection for preprocessing (outputs in monochrome)
-- `--feature-extraction`: Use feature extraction for preprocessing (outputs in monochrome)
 - `--mono`: Print the ASCII art in monochrome (grayscale) without colors
 - `--cats`: Display a random cat image
 - `--dogs`: Display a random dog image

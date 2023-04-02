@@ -16,8 +16,6 @@ def get_cli_arguments():
     preprocess_group = parser.add_argument_group("preprocessing")
     preprocess_group.add_argument("--contrast-stretching", action="store_true", help="Perform contrast stretching on the image")
     preprocess_group.add_argument("--gamma-correction", action="store_true", help="Perform gamma correction on the image")
-    preprocess_group.add_argument("--canny", action="store_true", help="Apply Canny edge detection (outputs in monochrome)")
-    preprocess_group.add_argument("--feature-extraction", action="store_true", help="Apply feature extraction (outputs in monochrome)")
     
     # Output style
     style_group = parser.add_argument_group("style")

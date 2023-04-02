@@ -38,16 +38,18 @@ class ColorManager:
         return self.basic_colors() + self.rgb_colors() + self.grayscale_colors()
 
     def ansi_palette(self):
-        # Add your ANSI palette implementation here
-        pass
+        return [
+            (0, 0, 0), (128, 0, 0), (0, 128, 0), (128, 128, 0),
+            (0, 0, 128), (128, 0, 128), (0, 128, 128), (192, 192, 192),
+            (128, 128, 128), (255, 0, 0), (0, 255, 0), (255, 255, 0),
+            (0, 0, 255), (255, 0, 255), (0, 255, 255), (255, 255, 255)
+        ]
 
     def truecolor_palette(self):
-        # Add your Truecolor palette implementation here
-        pass
+        return [(r, g, b) for r in range(256) for g in range(256) for b in range(256)]
 
     def closest_color(self, tile_np, invert=False):
-        
-        if np.min(tile_np[:, :, 3]) < 128:  # Tile has transparency
+        if tile_np.shape[2] > 3 and np.min(tile_np[:, :, 3]) < 128:  # Tile has transparency
             return None
         tile_color = np.mean(tile_np[:, :, :3], axis=(0, 1))
         if invert:
