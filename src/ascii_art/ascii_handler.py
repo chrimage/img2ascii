@@ -1,4 +1,3 @@
-import os
 import cv2
 import numpy as np
 from ascii_art.color_manager import ColorManager, ColorPalettes
@@ -19,14 +18,7 @@ class AsciiHandler:
         self.density_map = density_map
         self.color_manager = ColorManager(palette)
 
-    @staticmethod
-    def equalize_luminosity(image_np):
-        
-        ycrcb = cv2.cvtColor(image_np, cv2.COLOR_RGB2YCrCb)
-        ycrcb[..., 0] = cv2.equalizeHist(ycrcb[..., 0])
-        return cv2.cvtColor(ycrcb, cv2.COLOR_YCrCb2RGB)
-
-    def perform_contrast_stretching(self, image_np):
+    def adaptive_histogram_equalization(self, image_np):
         lab = cv2.cvtColor(image_np, cv2.COLOR_RGB2LAB)
         l, a, b = cv2.split(lab)
         clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
@@ -34,24 +26,16 @@ class AsciiHandler:
         limg = cv2.merge((cl, a, b))
         return cv2.cvtColor(limg, cv2.COLOR_LAB2RGB)
 
-    def perform_gamma_correction(self, image_np, gamma=1.5):
-        inv_gamma = 1.0 / gamma
-        lut = np.array([((i / 255.0) ** inv_gamma) * 255 for i in np.arange(0, 256)], dtype="uint8")
-        return cv2.LUT(image_np, lut)
-
-    def preprocess_image(self, image_np, contrast_stretching=False, gamma_correction=False):
-        if contrast_stretching:
-            image_np = self.perform_contrast_stretching(image_np)
-        if gamma_correction:
-            image_np = self.perform_gamma_correction(image_np)
+    def preprocess_image(self, image_np, adaptive_hist_eq=False):
+        if adaptive_hist_eq:
+            image_np = self.adaptive_histogram_equalization(image_np)
         return image_np
 
-    def image_to_ascii(self, contrast_stretching=False, gamma_correction=False, invert=False):
-        
-        img_np = self.img.copy()
-        img_np[:, :, :3] = self.equalize_luminosity(img_np[:, :, :3])
 
-        img_np = self.preprocess_image(img_np, contrast_stretching=contrast_stretching, gamma_correction=gamma_correction)
+    def image_to_ascii(self, adaptive_hist_eq=False, invert=False):
+        img_np = self.img.copy()
+
+        img_np = self.preprocess_image(img_np, adaptive_hist_eq=adaptive_hist_eq)
 
         img_height, img_width, _ = img_np.shape
         num_columns = self.width

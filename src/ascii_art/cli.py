@@ -12,11 +12,6 @@ def get_cli_arguments():
     source_group.add_argument("--webcam", action="store_true", help="Capture an image using the webcam")
     source_group.add_argument("--clipboard", action="store_true", help="Load image from the clipboard")
     
-    # Preprocessing
-    preprocess_group = parser.add_argument_group("preprocessing")
-    preprocess_group.add_argument("--contrast-stretching", action="store_true", help="Perform contrast stretching on the image")
-    preprocess_group.add_argument("--gamma-correction", action="store_true", help="Perform gamma correction on the image")
-    
     # Output style
     style_group = parser.add_argument_group("style")
     style_group.add_argument("--mono", action="store_true", help="Print the ASCII art in monochrome (grayscale)")

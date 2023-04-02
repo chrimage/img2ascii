@@ -37,7 +37,9 @@ class ImageHandler:
         ret, frame = cap.read()
         cap.release()
         cv2.destroyAllWindows()
-        return Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+        img = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+        img_np = np.array(img)
+        return img_np
 
     def load_image_from_clipboard(self):
         if sys.platform not in ["win32", "darwin"]:

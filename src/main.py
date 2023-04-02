@@ -34,8 +34,7 @@ def main():
 
         ascii_handler = AsciiHandler(img, args.width, palette=ColorPalettes(args.palette), density_map=args.density_map)
         ascii_map, color_map = ascii_handler.image_to_ascii(
-            contrast_stretching=args.contrast_stretching,
-            gamma_correction=args.gamma_correction,
+            adaptive_hist_eq=True,
             invert=args.invert
         )
 
