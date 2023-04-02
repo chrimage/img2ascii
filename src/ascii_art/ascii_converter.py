@@ -12,7 +12,7 @@ DENSITY_MAP_16 = ' ,;"<[?IneEhABR@'
 CHARACTER_ASPECT_RATIO = 0.4897959183673469
 
 class AsciiConverter:
-    def __init__(self, img, width, palette=ColorPalettes.xterm256, density_map=DENSITY_MAP_16):
+    def __init__(self, img, width, palette=ColorPalettes.xterm256, density_map=DENSITY_MAP_256):
         if width <= 0:
             raise ValueError("Width should be greater than 0.")
         self.img = img
@@ -26,7 +26,6 @@ class AsciiConverter:
         ycrcb = cv2.cvtColor(image_np, cv2.COLOR_RGB2YCrCb)
         ycrcb[..., 0] = cv2.equalizeHist(ycrcb[..., 0])
         return cv2.cvtColor(ycrcb, cv2.COLOR_YCrCb2RGB)
-
 
     def perform_contrast_stretching(self, image_np):
         lab = cv2.cvtColor(image_np, cv2.COLOR_RGB2LAB)
