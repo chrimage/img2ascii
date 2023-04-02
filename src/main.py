@@ -1,6 +1,6 @@
 import sys
 from colorama import init
-from ascii_art import get_cli_arguments, ImageHandler, AsciiConverter, ColorPalettes
+from ascii_art import get_cli_arguments, ImageHandler, AsciiHandler, ColorPalettes
 
 def generate_default_url(args):
     if args.cats:
@@ -32,22 +32,19 @@ def main():
 
         img = img_handler.load_image()
 
-        ascii_converter = AsciiConverter(img, args.width, palette=ColorPalettes(args.palette), density_map=args.density_map)
-        ascii_map, color_map = ascii_converter.image_to_ascii(
+        ascii_handler = AsciiHandler(img, args.width, palette=ColorPalettes(args.palette), density_map=args.density_map)
+        ascii_map, color_map = ascii_handler.image_to_ascii(
             contrast_stretching=args.contrast_stretching,
             gamma_correction=args.gamma_correction,
             invert=args.invert
         )
 
         if args.output:
-            ascii_converter.save_monochrome_ascii(ascii_map, args.output)
+            ascii_handler.save_monochrome_ascii(ascii_map, args.output)
         elif args.html:
-            ascii_converter.save_colored_ascii_html(ascii_map, color_map, args.html)
+            ascii_handler.save_colored_ascii_html(ascii_map, color_map, args.html)
         else:
-            if args.mono:
-                ascii_converter.print_monochrome_ascii(ascii_map)
-            else:
-                ascii_converter.print_colored_ascii(ascii_map, color_map)
+            ascii_handler.print_ascii(ascii_map, color_map, monochrome=args.mono)
 
     except Exception as e:
         print(f"An error occurred: {e}", file=sys.stderr)
