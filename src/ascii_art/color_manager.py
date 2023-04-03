@@ -65,4 +65,3 @@ class ColorManager:
         g = int(round(g / 255 * 5))
         b = int(round(b / 255 * 5))
         return 16 + 36 * r + 6 * g + b
-

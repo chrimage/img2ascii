@@ -7,12 +7,12 @@ from colorama import Fore, Back, Style
 import itertools
 
 DENSITY_MAP_256 = ' _,.`;\':-~"|!\/<()L>+J^=c*[{}]zirj1?syulvCIZt7oTx2Yng3pSqaeU5fVwEFOQXGmd9hHbD6PAk4%WB8K&N$#R0M@'
-DENSITY_MAP_16 = ' ,;"<[?IneEhABR@'
+DENSITY_MAP_16 = ' .,:"<+[?e=E*%#@'
 CHARACTER_ASPECT_RATIO = 0.4897959183673469
 
 
 class AsciiHandler:
-    def __init__(self, img, width, palette=ColorPalettes.xterm256, density_map=DENSITY_MAP_256):
+    def __init__(self, img, width, palette=ColorPalettes.xterm256, density_map=DENSITY_MAP_16):
         if width <= 0:
             raise ValueError("Width should be greater than 0.")
         self.img = img

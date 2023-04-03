@@ -1,7 +1,12 @@
+import os
 import sys
 from colorama import init
 from ascii_art import get_cli_arguments, ImageHandler, AsciiHandler, ColorPalettes
+import shutil
 
+def get_terminal_size():
+    columns, rows = os.get_terminal_size()
+    return rows, columns
 
 def generate_default_url(args):
     if args.cats:
@@ -11,12 +16,11 @@ def generate_default_url(args):
     else:
         return "https://picsum.photos/800/600"
 
-
 def main():
     args = get_cli_arguments()
+    terminal_rows, terminal_columns = get_terminal_size()
     if args.width <= 0:
-        print("Width should be greater than 0.")
-        sys.exit(1)
+        args.width = terminal_columns
     init()
 
     try:
@@ -31,6 +35,12 @@ def main():
         else:
             img_url = generate_default_url(args)
             img_handler = ImageHandler("url", img_url)
+
+        if args.width <= 0:
+            term_width, term_height = get_terminal_size()
+            width = term_width - 1
+        else:
+            width = args.width
 
         img = img_handler.load_image()
 
