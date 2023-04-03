@@ -2,6 +2,7 @@ import sys
 from colorama import init
 from ascii_art import get_cli_arguments, ImageHandler, AsciiHandler, ColorPalettes
 
+
 def generate_default_url(args):
     if args.cats:
         return "http://thecatapi.com/api/images/get?format=src&type=jpg"
@@ -9,6 +10,7 @@ def generate_default_url(args):
         return "https://dog.ceo/api/breeds/image/random"
     else:
         return "https://picsum.photos/800/600"
+
 
 def main():
     args = get_cli_arguments()
@@ -32,7 +34,8 @@ def main():
 
         img = img_handler.load_image()
 
-        ascii_handler = AsciiHandler(img, args.width, palette=ColorPalettes(args.palette), density_map=args.density_map)
+        ascii_handler = AsciiHandler(img, args.width, palette=ColorPalettes(
+            args.palette), density_map=args.density_map)
         ascii_map, color_map = ascii_handler.image_to_ascii(
             adaptive_hist_eq=True,
             invert=args.invert
@@ -41,12 +44,15 @@ def main():
         if args.output:
             ascii_handler.save_monochrome_ascii(ascii_map, args.output)
         elif args.html:
-            ascii_handler.save_colored_ascii_html(ascii_map, color_map, args.html)
+            ascii_handler.save_colored_ascii_html(
+                ascii_map, color_map, args.html)
         else:
-            ascii_handler.print_ascii(ascii_map, color_map, monochrome=args.mono)
+            ascii_handler.print_ascii(
+                ascii_map, color_map, monochrome=args.mono)
 
     except Exception as e:
         print(f"An error occurred: {e}", file=sys.stderr)
+
 
 if __name__ == "__main__":
     main()

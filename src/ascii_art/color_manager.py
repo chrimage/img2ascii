@@ -2,10 +2,12 @@ import numpy as np
 from scipy.spatial import KDTree
 from enum import Enum
 
+
 class ColorPalettes(Enum):
     xterm256 = "xterm256"
     ansi = "ansi"
     truecolor = "truecolor"
+
 
 class ColorManager:
     def __init__(self, palette: ColorPalettes = ColorPalettes.xterm256):
@@ -48,21 +50,19 @@ class ColorManager:
     def truecolor_palette(self):
         return [(r, g, b) for r in range(256) for g in range(256) for b in range(256)]
 
-    def closest_color(self, tile_np, invert=False):
-        if tile_np.shape[2] > 3 and np.min(tile_np[:, :, 3]) < 128:  # Tile has transparency
-            return None
-        tile_color = np.mean(tile_np[:, :, :3], axis=(0, 1))
+    def closest_color(self, tile_color, invert=False):
         if invert:
             tile_color = 255 - tile_color
-        min_color_index = self.palette_tree.query(tile_color)[1]
+
+        min_color_index = self.palette_tree.query(tile_color[:3])[1]
         return self.palette[min_color_index]
 
-    def xterm256_color_code(self, color):
-        r, g, b = color
-        if r == g and g == b:
-            if r < 8:
-                return "\033[38;5;16m"
-            if r > 248:
-                return "\033[38;5;231m"
-            return f"\033[38;5;{232 + (r - 8) // 10}m"
-        return f"\033[38;5;{16 + (r // 51) * 36 + (g // 51) * 6 + (b // 51)}m"
+    def xterm256_color(self, text, color_code):
+        return f"\x1b[38;5;{color_code}m{text}\x1b[0m"
+
+    def xterm256_color_code(self, r, g, b):
+        r = int(round(r / 255 * 5))
+        g = int(round(g / 255 * 5))
+        b = int(round(b / 255 * 5))
+        return 16 + 36 * r + 6 * g + b
+

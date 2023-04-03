@@ -6,6 +6,7 @@ from io import BytesIO
 from PIL import Image, ImageGrab
 from skimage import io
 
+
 class ImageHandler:
     def __init__(self, source_type, source):
         self.source_type = source_type
@@ -31,7 +32,7 @@ class ImageHandler:
     def load_image_from_file(self, file_path):
         img = io.imread(file_path)
         return img
-    
+
     def load_image_from_webcam(self):
         cap = cv2.VideoCapture(0)
         ret, frame = cap.read()
@@ -43,7 +44,8 @@ class ImageHandler:
 
     def load_image_from_clipboard(self):
         if sys.platform not in ["win32", "darwin"]:
-            raise OSError("ImageGrab.grabclipboard() is macOS and Windows only")
+            raise OSError(
+                "ImageGrab.grabclipboard() is macOS and Windows only")
         image = ImageGrab.grabclipboard()
         if image is None:
             raise ValueError("No image data found in clipboard")
